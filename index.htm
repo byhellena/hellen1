@@ -1,131 +1,1152 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>본리초 영어 말하기 인증</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>본리초 5학년 영어 식당 놀이</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #fff9e6; --primary: #ffcc00; --green: #4CAF50; --red: #ff6666; }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Jua', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
-        #game-container { width: 100%; max-width: 500px; background: white; border: 6px solid var(--primary); border-radius: 30px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        #visual-area { font-size: 80px; min-height: 100px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        #visual-area.speaking { animation: talk 0.3s infinite alternate; }
-        @keyframes talk { from { transform: scale(1); } to { transform: scale(1.1); } }
-        #message { background: #f9f9f9; border: 2px solid #eee; border-radius: 15px; padding: 15px; width: 100%; font-size: 18px; text-align: center; line-height: 1.5; min-height: 80px; }
-        #choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-        button { font-family: 'Jua', sans-serif; font-size: 18px; padding: 15px; border: none; border-radius: 12px; cursor: pointer; background: var(--primary); color: #333; box-shadow: 0 4px 0 #d4ac00; }
-        button:active { transform: translateY(2px); box-shadow: none; }
-        .btn-full { grid-column: span 2; }
-        .btn-green { background: var(--green); color: white; box-shadow: 0 4px 0 #388E3C; }
-        #status { font-size: 14px; color: #e53935; height: 20px; margin-top: 5px; }
-        #mic-btn { font-size: 30px; background: var(--red); color: white; width: 70px; height: 70px; border-radius: 50%; display: none; margin-top: 10px; border: none; }
+        :root {
+            --bg: #fff9e6;
+            --primary: #ffcc00;
+            --primary-dark: #d4ac00;
+            --green: #4CAF50;
+            --green-dark: #388E3C;
+            --red: #ff6666;
+            --red-dark: #cc3333;
+            --blue: #2196F3;
+            --blue-dark: #1565C0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        #game-container {
+            width: 860px;
+            max-width: 100%;
+            background: white;
+            border: 8px solid var(--primary);
+            border-radius: 30px;
+            padding: 22px 28px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #title { color: #555; font-size: 22px; }
+
+        #visual-area {
+            font-size: 88px;
+            line-height: 1.1;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s ease;
+        }
+        #visual-area.approach { transform: scale(1.35); }
+        #visual-area.speaking { animation: talk 0.35s infinite alternate; }
+        @keyframes talk {
+            from { transform: rotate(-5deg) scale(1.05); }
+            to   { transform: rotate( 5deg) scale(1.10); }
+        }
+
+        /* 식사 씬 */
+        #dining-scene {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        #dining-art {
+            font-size: 52px;
+            background: linear-gradient(135deg, #fff3e0, #fce4ec);
+            border-radius: 20px;
+            padding: 16px 30px;
+            border: 3px solid #ffb74d;
+            width: 90%;
+            text-align: center;
+            line-height: 1.8;
+        }
+        #dining-caption {
+            font-size: 18px;
+            color: #555;
+            background: #f9f9f9;
+            border-radius: 14px;
+            padding: 10px 20px;
+            text-align: center;
+            border: 2px solid #eee;
+            width: 90%;
+        }
+
+        /* 주문 확인 씬 */
+        #order-scene {
+            display: none;
+            width: 90%;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        #order-display {
+            background: linear-gradient(135deg, #e8f5e9, #f3e5f5);
+            border-radius: 20px;
+            padding: 18px 24px;
+            text-align: center;
+            border: 3px solid #81c784;
+            width: 100%;
+            font-size: 22px;
+            line-height: 1.8;
+        }
+
+        #message {
+            background: #f9f9f9;
+            border: 4px solid #eee;
+            border-radius: 20px;
+            padding: 16px 22px;
+            min-height: 88px;
+            width: 90%;
+            font-size: 23px;
+            line-height: 1.65;
+            white-space: pre-line;
+            text-align: center;
+        }
+
+        #choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 13px;
+            width: 84%;
+        }
+
+        button {
+            font-family: 'Jua', sans-serif;
+            font-size: 20px;
+            padding: 13px 10px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            background: var(--primary);
+            color: #333;
+            box-shadow: 0 4px 0 var(--primary-dark);
+        }
+        button:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--primary-dark); }
+        button:active { transform: translateY(2px);  box-shadow: none; }
+
+        .btn-full   { grid-column: span 2; }
+        .btn-green  { background: var(--green);  color: white; box-shadow: 0 4px 0 var(--green-dark); }
+        .btn-green:hover { box-shadow: 0 6px 0 var(--green-dark); }
+        .btn-red    { background: var(--red);    color: white; box-shadow: 0 4px 0 var(--red-dark); }
+        .btn-red:hover   { box-shadow: 0 6px 0 var(--red-dark); }
+        .btn-blue   { background: var(--blue);   color: white; box-shadow: 0 4px 0 var(--blue-dark); }
+        .btn-blue:hover  { box-shadow: 0 6px 0 var(--blue-dark); }
+        .btn-gray   { background: #999; color: white; box-shadow: 0 4px 0 #666; }
+
+        #speaking-badge {
+            display: none;
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 20px;
+            padding: 5px 18px;
+            font-size: 17px;
+            color: #856404;
+        }
+        #speaking-badge.show { display: inline-block; }
+
+        #mic-btn {
+            font-size: 38px;
+            background: var(--red);
+            color: white;
+            width: 84px; height: 84px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 18px rgba(255,102,102,0.45);
+            display: none;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        #mic-btn:hover { transform: scale(1.08); }
+        #mic-btn.listening { animation: pulse 0.8s infinite; background: #e53935; }
+        @keyframes pulse {
+            0%,100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(229,57,53,0.5); }
+            50%      { transform: scale(1.1); box-shadow: 0 0 0 12px rgba(229,57,53,0);   }
+        }
+
+        #status {
+            font-size: 19px;
+            color: #e53935;
+            font-weight: bold;
+            min-height: 26px;
+            text-align: center;
+        }
+
+        /* 마이크 선택 팝업 (최초 1회) */
+        #mic-choice-popup {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 998;
+            justify-content: center;
+            align-items: center;
+        }
+        #mic-choice-popup.show { display: flex; }
+        #mic-choice-box {
+            background: white;
+            border-radius: 24px;
+            padding: 34px 38px;
+            max-width: 480px; width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            border: 5px solid var(--primary);
+        }
+        #mic-choice-box h3 { font-size: 26px; color: #333; margin-bottom: 10px; }
+        #mic-choice-box p  { font-size: 17px; color: #555; line-height: 1.8; margin-bottom: 20px; }
+        .mic-choice-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .mic-choice-btns button { font-size: 18px; padding: 12px 24px; }
+
+        /* 마이크 권한 안내 팝업 */
+        #mic-guide {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        #mic-guide.show { display: flex; }
+        #mic-guide-box {
+            background: white;
+            border-radius: 24px;
+            padding: 34px 38px;
+            max-width: 460px; width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            border: 5px solid var(--primary);
+        }
+        #mic-guide-box h3 { font-size: 26px; color: #333; margin-bottom: 12px; }
+        #mic-guide-box p  { font-size: 17px; color: #555; line-height: 1.8; margin-bottom: 18px; white-space: pre-line; }
+        .guide-steps {
+            background: #fffbe6;
+            border-radius: 14px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 16px;
+            line-height: 2.1;
+            color: #444;
+        }
+        #mic-allow-btn {
+            font-family: 'Jua', sans-serif;
+            font-size: 21px;
+            background: var(--green); color: white;
+            border: none; border-radius: 14px;
+            padding: 13px 34px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--green-dark);
+            transition: 0.15s;
+        }
+        #mic-allow-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--green-dark); }
+
+        /* 쫓겨나기 씬 */
+        #kicked-scene {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 90%;
+        }
+        #kicked-art {
+            font-size: 70px;
+            animation: shake 0.4s infinite alternate;
+        }
+        @keyframes shake {
+            from { transform: rotate(-8deg); }
+            to   { transform: rotate(8deg); }
+        }
+        #kicked-msg {
+            background: #fff3f3;
+            border: 3px solid var(--red);
+            border-radius: 18px;
+            padding: 16px 22px;
+            font-size: 22px;
+            text-align: center;
+            color: #c62828;
+            line-height: 1.6;
+        }
+
+        /* Hellen 말풍선 */
+        #hellen-bubble {
+            display: none;
+            background: linear-gradient(135deg, #e3f2fd, #f8bbd0);
+            border: 3px solid #90caf9;
+            border-radius: 20px 20px 20px 4px;
+            padding: 14px 22px;
+            font-size: 20px;
+            max-width: 80%;
+            text-align: center;
+            margin: 0 auto;
+            animation: popIn 0.4s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+
+        /* 말하기 연습 안내 박스 */
+        #practice-box {
+            display: none;
+            background: linear-gradient(135deg, #fff8e1, #e8f5e9);
+            border: 4px solid #ffb300;
+            border-radius: 20px;
+            padding: 16px 22px;
+            width: 90%;
+            text-align: center;
+            font-size: 20px;
+            line-height: 1.7;
+        }
+        .practice-phrase {
+            font-size: 24px;
+            color: #1565c0;
+            font-weight: bold;
+            background: white;
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin: 8px auto;
+            display: inline-block;
+            border: 2px solid #90caf9;
+        }
+
+        .medal-wrap  { font-size: 130px; animation: bounce 0.9s infinite; }
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-18px); }
+        }
+        .success-title { color: #e67e22; font-size: 34px; font-weight: bold; margin-bottom: 8px; }
+        .success-sub   { font-size: 19px; color: #777; }
     </style>
 </head>
 <body>
 
+<!-- 마이크 선택 팝업 (최초 1회) -->
+<div id="mic-choice-popup">
+    <div id="mic-choice-box">
+        <h3>🎤 마이크 사용 설정</h3>
+        <p>이 앱에서 마이크를 사용할까요?<br>
+        마이크를 사용하면 영어를 직접 말하며<br>
+        연습할 수 있어요! 🌟<br>
+        <span style="font-size:14px;color:#999;">※ 한 번만 선택하면 다음부터는 묻지 않아요</span></p>
+        <div class="mic-choice-btns">
+            <button class="btn-green" onclick="setMicChoice(true)">🎤 마이크 사용할게요!</button>
+            <button class="btn-gray"  onclick="setMicChoice(false)">⌨️ 버튼으로 할게요</button>
+        </div>
+    </div>
+</div>
+
+<!-- 마이크 권한 안내 팝업 -->
+<div id="mic-guide">
+    <div id="mic-guide-box">
+        <h3>🎤 마이크 사용 안내</h3>
+        <p id="guide-msg">이 게임은 마이크가 필요해요!
+아래 버튼을 누르면 브라우저가
+<strong>마이크 허용 팝업</strong>을 띄워 줄 거예요.</p>
+        <div class="guide-steps">
+            ① 아래 버튼 클릭<br>
+            ② 브라우저 팝업 → <strong>"허용"</strong> 클릭<br>
+            ③ 팝업이 안 뜨면 주소창 왼쪽<br>
+            &nbsp;&nbsp;🔒 아이콘 → 마이크 → <strong>허용</strong>
+        </div>
+        <button id="mic-allow-btn">마이크 허용하기 🎤</button>
+    </div>
+</div>
+
 <div id="game-container">
+    <h2 id="title">🍽️ 세계 음식점 거리 (English Speaking)</h2>
     <div id="visual-area">🌍</div>
-    <div id="message">아래 버튼을 눌러 시작하세요!</div>
+
+    <!-- 쫓겨나기 씬 -->
+    <div id="kicked-scene">
+        <div id="kicked-art">🚪💨</div>
+        <div id="kicked-msg"></div>
+    </div>
+
+    <!-- 주문 확인 씬 -->
+    <div id="order-scene">
+        <div id="order-display"></div>
+    </div>
+
+    <!-- 식사 씬 -->
+    <div id="dining-scene">
+        <div id="dining-art"></div>
+        <div id="dining-caption"></div>
+    </div>
+
+    <div id="hellen-bubble"></div>
+    <div id="practice-box"></div>
+
+    <div id="message">내 친구 Hellen과 맛집에 가서 음식을 주문해보자! 🍽️✨<br>아래 버튼을 눌러 시작하세요!</div>
     <div id="choices">
         <button id="start-btn" class="btn-full btn-green">🎮 게임 시작하기</button>
     </div>
+    <div id="speaking-badge">🔊 직원이 말하고 있어요...</div>
     <button id="mic-btn">🎤</button>
     <div id="status"></div>
 </div>
 
 <script>
-const visual = document.getElementById('visual-area');
-const msg = document.getElementById('message');
-const choices = document.getElementById('choices');
-const micBtn = document.getElementById('mic-btn');
-const statusEl = document.getElementById('status');
+// ══════════════════════════════════════════
+//  DOM 참조
+// ══════════════════════════════════════════
+const msg            = document.getElementById('message');
+const choices        = document.getElementById('choices');
+const visual         = document.getElementById('visual-area');
+const micBtn         = document.getElementById('mic-btn');
+const statusEl       = document.getElementById('status');
+const startBtn       = document.getElementById('start-btn');
+const micGuide       = document.getElementById('mic-guide');
+const micAllowBtn    = document.getElementById('mic-allow-btn');
+const speakingBadge  = document.getElementById('speaking-badge');
+const guideMsg       = document.getElementById('guide-msg');
+const micChoicePopup = document.getElementById('mic-choice-popup');
+const diningScene    = document.getElementById('dining-scene');
+const diningArt      = document.getElementById('dining-art');
+const diningCaption  = document.getElementById('dining-caption');
+const orderScene     = document.getElementById('order-scene');
+const orderDisplay   = document.getElementById('order-display');
+const hellenBubble   = document.getElementById('hellen-bubble');
+const practiceBox    = document.getElementById('practice-box');
+const kickedScene    = document.getElementById('kicked-scene');
+const kickedMsg      = document.getElementById('kicked-msg');
 
-let audioUnlocked = false;
+// ══════════════════════════════════════════
+//  식당 데이터
+// ══════════════════════════════════════════
+const drinks = ['Soda', 'Coke', 'Juice', 'Tea', 'Milk'];
 
-// [필살기] 오디오 엔진 강제 활성화 함수
-function forceUnlockAudio() {
-    if (audioUnlocked) return;
-    
-    // 1. Web Audio API 깨우기
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const silent = ctx.createGain();
-        silent.gain.value = 0;
-        osc.connect(silent);
-        silent.connect(ctx.destination);
-        osc.start(0);
-        osc.stop(0.1);
+// 음식 이모지 맵
+const foodEmoji = {
+    'Bibimbap':'🍲','Bulgogi':'🥩','Jajangmyeon':'🍜','Mapo Tofu':'🫕',
+    'Sushi':'🍣','Ramen':'🍜','Pasta':'🍝','Pizza':'🍕',
+    'Yakgwa':'🍪','Hotteok':'🥞','Tanghulu':'🍡','Egg Tart':'🥧',
+    'Mochi':'🍡','Dorayaki':'🥞','Gelato':'🍨','Tiramisu':'🍰',
+    'Dalgona':'🍬','Kulfi':'🍦','Ice Cream':'🍦',
+    'Soda':'🥤','Coke':'🥤','Juice':'🍊','Tea':'🍵','Milk':'🥛','Water':'💧'
+};
+
+const restaurantData = {
+    '한식(Korean)': {
+        staff: '👨‍🍳',
+        menus:    ['Bibimbap', 'Bulgogi'],
+        desserts: ['Dalgona', 'Kulfi', 'Ice Cream', 'Yakgwa', 'Hotteok'],
+        voice: { pitch: 0.85, rate: 0.78, gender: 'male',   lang: 'en-US' }
+    },
+    '중식(Chinese)': {
+        staff: '👩‍🍳',
+        menus:    ['Jajangmyeon', 'Mapo Tofu'],
+        desserts: ['Dalgona', 'Kulfi', 'Ice Cream', 'Tanghulu', 'Egg Tart'],
+        voice: { pitch: 1.30, rate: 0.78, gender: 'female', lang: 'en-US' }
+    },
+    '일식(Japanese)': {
+        staff: '🧑‍🍳',
+        menus:    ['Sushi', 'Ramen'],
+        desserts: ['Dalgona', 'Kulfi', 'Ice Cream', 'Mochi', 'Dorayaki'],
+        voice: { pitch: 1.0,  rate: 0.78, gender: 'female', lang: 'en-GB' }
+    },
+    '이탈리아(Italian)': {
+        staff: '👨‍🍳',
+        menus:    ['Pasta', 'Pizza'],
+        desserts: ['Dalgona', 'Kulfi', 'Ice Cream', 'Gelato', 'Tiramisu'],
+        voice: { pitch: 1.1,  rate: 0.78, gender: 'male',   lang: 'en-US' }
     }
+};
 
-    // 2. TTS 엔진 깨우기 (매우 중요)
+// ══════════════════════════════════════════
+//  게임 상태
+// ══════════════════════════════════════════
+let currentStep        = 'start';
+let selectedRestaurant = '';
+let recognition        = null;
+let useMic             = false;
+let menuRejectCount    = 0;   // 메인메뉴 거절 횟수
+let currentMenu        = '';  // 현재 권하고 있는 메뉴
+let menuQueue          = [];  // 남은 메뉴 목록
+let drinkIndex         = 0;
+let dessertIndex       = 0;
+let orderedMain        = '';
+let orderedDessert     = '';
+
+// ══════════════════════════════════════════
+//  마이크 설정: 최초 1회만 묻고 localStorage에 저장
+// ══════════════════════════════════════════
+startBtn.onclick = function () {
+    unlockAudioContext(); // 모바일 자동재생 차단 해제 (첫 터치에서 실행)
+    var saved = localStorage.getItem('micSetting');
+    if (!saved) {
+        micChoicePopup.classList.add('show');
+    } else {
+        useMic = (saved === 'yes');
+        if (useMic) {
+            tryBootWithMic();
+        } else {
+            bootGame();
+        }
+    }
+};
+
+function setMicChoice(useIt) {
+    unlockAudioContext(); // 팝업 버튼 클릭 시도 unlock
+    micChoicePopup.classList.remove('show');
+    localStorage.setItem('micSetting', useIt ? 'yes' : 'no');
+    useMic = useIt;
+    if (useIt) {
+        tryBootWithMic();
+    } else {
+        bootGame();
+    }
+}
+
+// 마이크 권한 확인 (이미 granted면 팝업 없이 바로)
+function tryBootWithMic() {
+    if (localStorage.getItem('micGranted') === 'yes' && navigator.permissions) {
+        navigator.permissions.query({ name: 'microphone' })
+            .then(function (r) {
+                if (r.state === 'granted') {
+                    bootGame();
+                } else {
+                    localStorage.removeItem('micGranted');
+                    micGuide.classList.add('show');
+                }
+            })
+            .catch(function () {
+                // Permissions API 불가 → 이미 granted 기록 있으면 그냥 시작
+                bootGame();
+            });
+    } else if (localStorage.getItem('micGranted') === 'yes') {
+        bootGame();
+    } else {
+        micGuide.classList.add('show');
+    }
+}
+
+micAllowBtn.onclick = function () {
+    unlockAudioContext(); // 마이크 허용 버튼도 unlock 포인트
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(function (stream) {
+            stream.getTracks().forEach(function (t) { t.stop(); });
+            localStorage.setItem('micGranted', 'yes');
+            micGuide.classList.remove('show');
+            bootGame();
+        })
+        .catch(function (err) {
+            var hint = '이 게임은 마이크가 필요해요!\n아래 버튼을 눌러 허용해 주세요.';
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                hint = '마이크 허용이 거부됐어요.\n주소창 왼쪽 🔒 아이콘을 눌러\n마이크를 "허용"으로 바꾼 뒤\n다시 눌러주세요!';
+            } else if (err.name === 'NotFoundError') {
+                hint = '마이크를 찾을 수 없어요.\n마이크 연결 상태를 확인해 주세요!';
+            }
+            guideMsg.innerText = hint;
+        });
+};
+
+function bootGame() {
+    if (useMic) initRecognition();
+    showRestaurantSelection();
+}
+
+// ══════════════════════════════════════════
+//  음성 인식 (한 번만 초기화)
+// ══════════════════════════════════════════
+function initRecognition() {
+    if (recognition) return;
+    var SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechAPI) { alert('크롬(Chrome) 브라우저를 사용해주세요!'); return; }
+    recognition = new SpeechAPI();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 3;
+    recognition.continuous = false;
+
+    recognition.onresult = function (event) {
+        micBtn.classList.remove('listening');
+        var best = event.results[0][0];
+        var transcript = best.transcript.toLowerCase().trim();
+        var confidence = (best.confidence || 0.8) * 100;
+        checkVoice(transcript, confidence);
+    };
+    recognition.onerror = function (e) {
+        micBtn.classList.remove('listening');
+        if (e.error === 'no-speech') {
+            setStatus('소리가 감지되지 않았어요. 다시 눌러 말해주세요!');
+        } else if (e.error === 'not-allowed') {
+            setStatus('마이크 권한이 없어요. 새로고침 후 다시 시도해주세요.');
+        } else {
+            setStatus('잘 안 들려요! 다시 눌러 말해주세요. (' + e.error + ')');
+        }
+        micBtn.style.display = 'block';
+    };
+    recognition.onend = function () {
+        micBtn.classList.remove('listening');
+    };
+}
+
+// ══════════════════════════════════════════
+//  TTS
+// ══════════════════════════════════════════
+
+// ── 모바일 자동재생 차단 해제용 AudioContext ──
+var audioCtxUnlocked = false;
+function unlockAudioContext() {
+    if (audioCtxUnlocked) return;
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var buf = ctx.createBuffer(1, 1, 22050);
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+        ctx.resume().then(function(){ ctx.close(); });
+    } catch(e) {}
+    // iOS Safari: speechSynthesis를 빈 utterance로 한 번 깨워두기
     if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(" ");
-        utter.volume = 0;
-        window.speechSynthesis.speak(utter);
+        var dummy = new SpeechSynthesisUtterance('');
+        dummy.volume = 0;
+        window.speechSynthesis.speak(dummy);
     }
-    
-    audioUnlocked = true;
-    console.log("Audio Unlocked!");
+    audioCtxUnlocked = true;
+}
+
+var voiceList = [];
+function loadVoices() { voiceList = window.speechSynthesis.getVoices(); }
+loadVoices();
+if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
 function speak(text, callback) {
-    if (!window.speechSynthesis) return callback();
+    if (!window.speechSynthesis) { if (callback) callback(); return; }
 
     window.speechSynthesis.cancel();
-    
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    utter.rate = 0.8;
 
-    let isDone = false;
-    const finish = () => {
-        if (isDone) return;
-        isDone = true;
-        visual.classList.remove('speaking');
-        if (callback) callback();
-    };
+    var data = restaurantData[selectedRestaurant];
+    var vp   = data ? data.voice : { pitch: 1, rate: 0.78, gender: 'female', lang: 'en-US' };
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = vp.lang; utter.pitch = vp.pitch; utter.rate = vp.rate;
 
-    // [안전장치] 소리가 안 나더라도 3.5초 뒤엔 무조건 다음으로!
-    const fallback = setTimeout(finish, 3500);
-
-    utter.onend = () => { clearTimeout(fallback); finish(); };
-    utter.onerror = () => { clearTimeout(fallback); finish(); };
+    if (voiceList.length > 0) {
+        var pool = voiceList.filter(function(v){ return v.lang.startsWith(vp.lang.split('-')[0]); });
+        if (!pool.length) pool = voiceList;
+        var femRx = /female|zira|samantha|karen|moira|victoria|fiona|susan|kate|tessa/i;
+        var malRx = /male|david|daniel|alex|tom|fred|george|rishi/i;
+        var pick  = pool.find(function(v){ return vp.gender==='female'?femRx.test(v.name):malRx.test(v.name); });
+        utter.voice = pick || pool[vp.gender==='female'?0:Math.min(1,pool.length-1)];
+    }
 
     visual.classList.add('speaking');
-    
-    // 모바일 딜레이 보정
-    setTimeout(() => {
+    speakingBadge.classList.add('show');
+
+    var cbCalled = false;
+    function done() {
+        if (cbCalled) return;
+        cbCalled = true;
+        visual.classList.remove('speaking');
+        speakingBadge.classList.remove('show');
+        if (callback) callback();
+    }
+
+    utter.onend   = done;
+    utter.onerror = done;
+
+    // ── 안전망: 예상 재생 시간 + 2초 뒤에도 콜백 미실행이면 강제 실행 ──
+    // (모바일에서 onend 이벤트가 안 오는 경우 대비)
+    var estimatedMs = Math.max(2000, (text.length / 10) * (1 / vp.rate) * 1000 + 2000);
+    var safeTimer = setTimeout(done, estimatedMs);
+
+    utter.onend = function() { clearTimeout(safeTimer); done(); };
+    utter.onerror = function() { clearTimeout(safeTimer); done(); };
+
+    // iOS Safari는 짧은 딜레이 후 speak() 해야 안정적
+    setTimeout(function() {
+        // iOS에서 synthesis가 멈춰있을 때 resume() 먼저 호출
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
         window.speechSynthesis.speak(utter);
-    }, 50);
+
+        // iOS Safari 버그: speak() 후 일정 시간마다 resume() 해줘야 끊기지 않음
+        var resumeTimer = setInterval(function() {
+            if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+        }, 250);
+        setTimeout(function(){ clearInterval(resumeTimer); }, estimatedMs);
+    }, 100);
 }
 
-document.getElementById('start-btn').onclick = function() {
-    forceUnlockAudio(); // 터치하는 순간 엔진 해제
-    this.style.display = 'none';
-    msg.innerText = "식당을 선택해 주세요.";
-    
-    const restaurants = ['한식', '일식', '중식', '양식'];
-    choices.innerHTML = '';
-    restaurants.forEach(r => {
-        const btn = document.createElement('button');
-        btn.innerText = r;
-        btn.onclick = () => {
-            visual.innerText = '👨‍🍳';
-            msg.innerText = "식당에 들어왔습니다!";
-            choices.innerHTML = '';
-            setTimeout(askFood, 1000);
-        };
-        choices.appendChild(btn);
-    });
+// ══════════════════════════════════════════
+//  UI 헬퍼
+// ══════════════════════════════════════════
+function setMsg(text)    { msg.innerText = text; }
+function setStatus(text) { statusEl.innerText = text; }
+function clearChoices()  { choices.innerHTML = ''; }
+function hideMic()       { micBtn.style.display = 'none'; micBtn.classList.remove('listening'); }
+
+function hideAllScenes() {
+    diningScene.style.display  = 'none';
+    orderScene.style.display   = 'none';
+    kickedScene.style.display  = 'none';
+    hellenBubble.style.display = 'none';
+    practiceBox.style.display  = 'none';
+}
+
+function showMic(target) {
+    clearChoices();
+    currentStep = target;
+    micBtn.style.display = 'block';
+    micBtn.classList.remove('listening');
+    setStatus('🎤 마이크 버튼을 누르고 크게 말해보세요!');
+}
+
+micBtn.onclick = function () {
+    if (!recognition) return;
+    try { recognition.abort(); } catch(e) {}
+    setTimeout(function () {
+        try {
+            recognition.start();
+            micBtn.classList.add('listening');
+            setStatus('👂 듣고 있어요... 말씀하세요!');
+        } catch(e) { setStatus('다시 눌러보세요!'); }
+    }, 200);
 };
 
-function askFood() {
-    msg.innerText = "직원: Hello! Do you want some Bibimbap?";
-    speak("Hello! Do you want some Bibimbap?", () => {
-        choices.innerHTML = `
-            <button class="btn-green" onclick="finalStep(true)">Yes, please!</
+function showYesNoButtons(onYes, onNo) {
+    clearChoices(); hideMic();
+    var y = document.createElement('button'); y.className='btn-green'; y.innerText='✅ Yes, please!'; y.onclick=onYes;
+    var n = document.createElement('button'); n.className='btn-red';   n.innerText='❌ No, thanks!';  n.onclick=onNo;
+    choices.appendChild(y); choices.appendChild(n);
+    setStatus('');
+}
+
+// ══════════════════════════════════════════
+//  게임 흐름
+// ══════════════════════════════════════════
+
+// ── 식당 선택 ─────────────────────────────
+function showRestaurantSelection() {
+    visual.innerText = '🌍';
+    visual.classList.remove('approach', 'speaking');
+    hideAllScenes();
+    setMsg('내 친구 Hellen과 맛집에 가서 음식을 주문해보자! 🍽️✨\n어느 식당에 들어가 볼까요?');
+    clearChoices();
+    Object.keys(restaurantData).forEach(function(name){
+        var btn = document.createElement('button');
+        btn.innerText = name;
+        btn.onclick = function(){ enterRestaurant(name); };
+        choices.appendChild(btn);
+    });
+    setStatus(''); hideMic();
+}
+
+// ── 입장 ──────────────────────────────────
+function enterRestaurant(name) {
+    selectedRestaurant = name;
+    menuRejectCount = 0;
+    drinkIndex      = 0;
+    dessertIndex    = 0;
+    orderedMain     = '';
+    orderedDessert  = '';
+    // 메뉴를 섞어서 큐에 넣기
+    menuQueue = restaurantData[name].menus.slice();
+    visual.innerText = restaurantData[name].staff;
+    visual.classList.add('approach');
+    hideAllScenes();
+    setMsg(name + ' 식당에 들어왔어요! 🚪\nHellen과 함께 자리를 잡았어요...');
+    clearChoices(); setStatus(''); hideMic();
+    setTimeout(sayHello, 1500);
+}
+
+// ── 인사 ──────────────────────────────────
+function sayHello() {
+    visual.classList.remove('approach');
+    setMsg('직원: Hello! 👋\n(올바른 대답을 골라보세요)');
+    clearChoices();
+    speak('Hello! Welcome!', function(){
+        choices.innerHTML =
+            '<button onclick="checkHelloChoice(\'right\')">Hello!</button>' +
+            '<button onclick="checkHelloChoice(\'wrong1\')">Goodbye!</button>' +
+            '<button onclick="checkHelloChoice(\'wrong2\')">I\'m hungry!</button>' +
+            '<button onclick="checkHelloChoice(\'wrong3\')">I\'m sorry!</button>';
+    });
+}
+
+function checkHelloChoice(ans) {
+    if (ans === 'right') {
+        setStatus('✅ 정답!');
+        if (useMic) {
+            setMsg("잘 했어요! 이번엔 마이크로\n'Hello!'라고 직접 말해보세요. 🎤");
+            clearChoices();
+            setTimeout(function(){ showMic('hello'); }, 500);
+        } else {
+            setMsg("잘 했어요! 인사를 잘 하는군요! 👋");
+            setTimeout(function(){ askMenu(); }, 900);
+        }
+    } else {
+        visual.innerText = '🤔';
+        setMsg('직원: Sorry? 😅\n다시 인사해볼까요?');
+        setStatus('❌ 다시 골라보세요!');
+        setTimeout(function(){
+            visual.innerText = restaurantData[selectedRestaurant].staff;
+            sayHello();
+        }, 1200);
+    }
+}
+
+// ── 메인 메뉴 (1개 고르기, 4번 거절하면 쫓겨남) ──
+function askMenu() {
+    // 현재 권할 메뉴 결정: menuQueue를 순환
+    if (menuQueue.length === 0) menuQueue = restaurantData[selectedRestaurant].menus.slice();
+    currentMenu = menuQueue.shift();
+
+    setMsg('직원: Do you want some ' + currentMenu + '? 🍽️\n"Yes, please!" 또는 "No, thanks!"라고 해보세요.\n\n' +
+           foodEmoji[currentMenu] + ' ' + currentMenu);
+    speak('Do you want some ' + currentMenu + '?', function(){
+        if (useMic) {
+            showMic('menu');
+        } else {
+            showYesNoButtons(
+                function(){ handleMenuAnswer(true); },
+                function(){ handleMenuAnswer(false); }
+            );
+        }
+    });
+}
+
+function handleMenuAnswer(isYes) {
+    if (isYes) {
+        orderedMain = currentMenu;
+        setStatus('🌟 Great choice!');
+        setMsg('직원: Excellent! Enjoy your ' + currentMenu + '! 😊');
+        speak('Excellent! Enjoy your ' + currentMenu + '!', function(){
+            drinkIndex = 0;
+            setTimeout(askDrink, 800);
+        });
+    } else {
+        menuRejectCount++;
+        if (menuRejectCount >= 4) {
+            // 4번 거절 → 쫓겨나기
+            showKicked();
+        } else {
+            setStatus('다른 메뉴를 추천해 드릴게요! 😊');
+            // 큐가 비면 다시 채우기
+            if (menuQueue.length === 0) menuQueue = restaurantData[selectedRestaurant].menus.slice();
+            setTimeout(askMenu, 700);
+        }
+    }
+}
+
+// ── 쫓겨나기 ──────────────────────────────
+function showKicked() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    visual.innerText = '😤';
+    hideAllScenes();
+    kickedScene.style.display = 'flex';
+    kickedMsg.innerHTML =
+        '직원: Come back when you\'re hungry! 😤<br>' +
+        '<span style="font-size:18px;color:#888;">배고플 때 다시 오세요!</span>';
+    setMsg('');
+    clearChoices();
+    speak("Come back when you're hungry!", function(){});
+    setTimeout(function(){
+        kickedScene.style.display = 'none';
+        clearChoices();
+        choices.innerHTML =
+            '<button class="btn-full btn-gray" onclick="showRestaurantSelection()">🔄 처음부터 다시 시작하기</button>';
+        setMsg('😭 식당에서 쫓겨났어요!\n다른 식당에 도전해볼까요?');
+        setStatus('');
+    }, 3000);
+}
+
+// ── 음료 (5가지 순환, 다 거절 시 물) ────────
+function askDrink() {
+    var drink = drinks[drinkIndex];
+    var emoji = foodEmoji[drink] || '🥤';
+    setMsg('직원: How about some ' + drink + '? ' + emoji + '\n"Yes, please!" 또는 "No, thanks!"라고 해보세요.');
+    speak('How about some ' + drink + '?', function(){
+        if (useMic) {
+            showMic('drink');
+        } else {
+            showYesNoButtons(
+                function(){ handleDrinkAnswer(true); },
+                function(){ handleDrinkAnswer(false); }
+            );
+        }
+    });
+}
+
+function handleDrinkAnswer(isYes) {
+    if (isYes) {
+        var drink = drinks[drinkIndex];
+        setStatus('🥤 Good choice!');
+        setMsg('직원: Great! Here is your ' + drink + '! Enjoy! 😊');
+        speak('Great! Here is your ' + drink + '! Enjoy!', function(){
+            dessertIndex = 0;
+            setTimeout(askDessert, 800);
+        });
+    } else {
+        drinkIndex++;
+        if (drinkIndex < drinks.length) {
+            setTimeout(askDrink, 600);
+        } else {
+            setMsg('직원: Okay! I\'ll bring you some water then. 💧');
+            speak("Okay! I'll bring you some water then.", function(){
+                dessertIndex = 0;
+                setTimeout(askDessert, 800);
+            });
+        }
+    }
+}
+
+// ── 디저트 (3번 권유, 다 거절 시 넘어감) ─────
+function askDessert() {
+    var desserts = restaurantData[selectedRestaurant].desserts;
+    var dessert  = desserts[dessertIndex];
+    var emoji    = foodEmoji[dessert] || '🍮';
+    setMsg('직원: Would you like some ' + dessert + ' for dessert? ' + emoji + '\n"Yes, please!" 또는 "No, thanks!"라고 해보세요.');
+    speak('Would you like some ' + dessert + ' for dessert?', function(){
+        if (useMic) {
+            showMic('dessert');
+        } else {
+            showYesNoButtons(
+                function(){ handleDessertAnswer(true); },
+                function(){ handleDessertAnswer(false); }
+            );
+        }
+    });
+}
+
+function handleDessertAnswer(isYes) {
+    var desserts = restaurantData[selectedRestaurant].desserts;
+    var dessert  = desserts[dessertIndex];
+    if (isYes) {
+        orderedDessert = dessert;
+        setStatus('🍮 Sweet choice!');
+        setMsg('직원: Wonderful! Enjoy your ' + dessert + '! 😋');
+        speak('Wonderful! Enjoy your ' + dessert + '!', function(){
+            setTimeout(showOrderSummary, 800);
+        });
+    } else {
+        dessertIndex++;
+        if (dessertIndex < 3) {
+            setTimeout(askDessert, 600);
+        } else {
+            orderedDessert = '';
+            setMsg("직원: Alright! No dessert for you today. That's okay! 😊");
+            speak("Alright! No dessert for you today. That's okay!", function(){
+                setTimeout(showOrderSummary, 800);
+            });
+        }
+    }
+}
+
+// ── 주문 완료 표시 ─────────────────────────
+function showOrderSummary() {
+    hideAllScenes();
+    orderScene.style.display = 'flex';
+
+    var mainEmoji    = foodEmoji[orderedMain]    || '🍽️';
+    var dessertEmoji = foodEmoji[orderedDessert] || '';
+
+    var html = '🍽️ 주문한 음식이 나왔어요!<br><br>';
+    html += '<span style="font-size:42px;">' + mainEmoji + '</span> ';
+    html += '<span style="font-size:20px;">' + orderedMain + '</span>';
+    if (orderedDessert) {
+        html += '&nbsp;&nbsp;<span style="font-size:42px;">' + dessertEmoji + '</span> ';
+        html += '<span style="font-size:20px;">' + orderedDessert + '</span>';
+    }
+    html += '<br><span style="font-size:16px;color:#888;">Your food is ready!</span>';
+    orderDisplay.innerHTML = html;
+
+    setMsg(''); clearChoices(); setStatus(''); hideMic();
+
+    setTimeout(function(){
+        orderScene.style.display = 'none';
+        showDiningScene();
+    }, 2500);
+}
+
+// ── 식사 씬 ───────────────────────────────
+function showDiningScene() {
+    diningScene.style.display = 'flex';
+
+    var mainEmoji    = foodEmoji[orderedMain]    || '🍽️';
+    var dessertEmoji = orderedDessert ? (foodEmoji[orderedDessert] || '🍮') : '';
+
+    diningArt.innerHTML =
+        '🧑‍🦰 Hellen &nbsp;&nbsp; 😄 You<br>' +
+        '<span style="font-size:44px;">🍴 ' + mainEmoji + (dessertEmoji ? ' ' + dessertEmoji : '') + ' 🍴</span><br>' +
+        '<span style="font-size:22px;">😋 Yum yum yum!</span>';
+
+    diningCaption.innerText = 'You and Hellen are enjoying your meal! 😄\n맛있게 먹고 있어요~';
+    setMsg(''); clearChoices();
+
+    setTimeout(function(){
+        startHellenPractice();
+    }, 2500);
+}
+
+// ── Hellen 권하기 말하기 연습 ──────────────
+function startHellenPractice() {
+    diningScene.style.display = 'none';
+
+    // 연습 목록: 메인 1개 + 디저트 1개(있으면)
+    var list = [orderedMain];
+    if (orderedDessert) list.push(orderedDessert);
+    window._practiceList = list;
+    window._practiceIdx  = 0;
+
+    showHellenPrompt();
+}
+
+function showHellenPrompt() {
+    var list = window._practiceList;
+    var idx  = window._practiceIdx;
+    if (idx >= list.length) { showEnding(); return; }
+    var food = list[idx];
+
+    visual.innerText = '😄';
+    hellenBubble.style.display = 'none';
+    practiceBox.style.display  = 'block';
+    practiceBox.innerHTML =
+        '와, 이거 맛있는걸? 🤩<br>' +
+        'Hellen에게도 먹으라고 권해볼까요?<br><br>' +
+        '<div class="practice-phrase">Hellen, do you want some <strong>' + food + '</strong>?</div><br>' +
+        '마이크에 대고 말해보세요! 🎤';
+
+    setMsg(''); clearChoices(); setStatus('');
+
+    if (useMic) {
+        hideMic();
+        setTimeout(function(){ showMic('hellen_practice'); }, 400);
+    } else {
+        var btn = document.createElement('button');
+        btn.className = 'btn-full btn-blue';
+        btn.innerText = '🎤 "Hellen, do you want some ' + food + '?" 말했어요!';
+        btn.onclick   = function(){ handleHellenPractice(food); };
+        choices.appendChild(btn);
+        setStatus('위 버튼을 눌러 말했다고 표시하세요!');
+    }
+}
+
+function handleHellenPractice(food) {
+    window._practiceIdx++;
+    var hellenYes  = Math.random() < 0.7;
+    var hellenResp = hellenYes ? "Yes, thanks! 😍 It's delicious!" : "No, thanks! I'm full! 😅";
+
+    practiceBox.style.display  = 'none';
+    hellenBubble.style.display = 'block';
+    hellenBubble.innerHTML     = '👩 Hellen says:<br><strong>' + hellenResp + '</strong>';
+    visual.innerText = hellenYes ? '😄' : '😅';
+    setMsg(''); clearChoices(); hideMic();
+    setStatus(hellenYes ? '🌟 Hellen이 먹겠다고 해요! 잘했어요!' : '😅 Hellen은 배가 불대요! 괜찮아요~');
+
+    if (window._practiceIdx < window._practiceList.length) {
+        setTimeout(function(){
+            hellenBubble.style.display = 'none';
+            showHellenPrompt();
+        }, 2200);
+    } else {
+        setTimeout(showEnding, 2200);
+    }
+}
+
+// ── 음성 인식 결과 처리 ──────────────────
+function checkVoice(text, score) {
+    hideMic();
+    console.log('인식:', text, '| 정확도:', Math.round(score) + '%');
+
+    var isYes = /yes|yeah|yep|sure|okay|ok|please|플리즈|네|예/.test(text);
+    var isNo  = /no|nope|나|아니|않|thanks|thank/.test(text);
+
+    // ── Hellen 연습: 정확도 60% 이상 필요 ──
+    if (currentStep === 'hellen_practice') {
+        if (score < 60) {
+            setStatus('다시 말해보세요! (정확도: ' + Math.round(score) + '% → 60% 이상 필요해요)');
+            micBtn.style.display = 'block';
+            return;
+        }
+        var food = window._practiceList[window._practiceIdx] || '';
+        // "do you want some" 또는 음식 이름 포함 여부 확인
+        var foodWords  = food.toLowerCase().split(' ');
+        var hasFood    = foodWords.some(function(w){ return w.length > 2 && text.indexOf(w) >= 0; });
+        var hasPhrase  = /want|do you|hellen/.test(text);
+        if (hasFood || hasPhrase || text.length > 5) {
+            setStatus('🌟 Excellent! (인식: "' + text + '", 정확도: ' + Math.round(score) + '%)');
+            handleHellenPractice(food);
+        } else {
+            setStatus('다시 말해보세요! "Hellen, do you want some ' + food + '?"');
+            micBtn.style.display = 'block';
+        }
+        return;
+    }
+
+    // ── 그 외 단계: 정확도 50% 미만이면 재도전 ──
+    if (score < 50) {
+        setStatus('다시 말해보세요! (인식: "' + text + '", 정확도: ' + Math.round(score) + '%)');
+        micBtn.style.display = 'block';
+        return;
+    }
+
+    if (currentStep === 'hello') {
+        setStatus('🌟 Excellent!');
+        setTimeout(function(){ askMenu(); }, 900);
+        return;
+    }
+
+    if (currentStep === 'menu') {
+        if (isYes)      handleMenuAnswer(true);
+        else if (isNo)  handleMenuAnswer(false);
+        else { setStatus('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); micBtn.style.display='block'; }
+        return;
+    }
+
+    if (currentStep === 'drink') {
+        if (isYes)      handleDrinkAnswer(true);
+        else if (isNo)  handleDrinkAnswer(false);
+        else { setStatus('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); micBtn.style.display='block'; }
+        return;
+    }
+
+    if (currentStep === 'dessert') {
+        if (isYes)      handleDessertAnswer(true);
+        else if (isNo)  handleDessertAnswer(false);
+        else { setStatus('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); micBtn.style.display='block'; }
+        return;
+    }
+}
+
+// ── 엔딩 ─────────────────────────────────
+function showEnding() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    hideAllScenes();
+    visual.innerHTML = '<div class="medal-wrap">🏅</div>';
+    setMsg('세계 어디를 가도 음식은 잘 주문하겠군요!\nGood job! 👏');
+    speak('Excellent! Good job! See you next time!');
+    choices.innerHTML =
+        '<div style="grid-column:span 2; text-align:center;">' +
+        '<div class="success-title">🎉  5학년 2단원 말하기 인증 성공!</div>' +
+        '<div class="success-sub" style="margin:10px 0 18px;">선생님께 이 화면을 보여드리고 확인받으세요!</div>' +
+        '<button class="btn-gray" onclick="location.reload()" style="width:180px;">🔄 다시 하기</button>' +
+        '</div>';
+    setStatus(''); hideMic();
+}
+</script>
+</body>
+</html>
