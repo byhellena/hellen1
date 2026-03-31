@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>본리초 5학년 영어 말하기 인증</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #fff9e6; --primary: #ffcc00; --secondary: #ff6666; }
+        body { font-family: 'Jua', sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        #game-container { width: 850px; height: 650px; background: white; border: 8px solid var(--primary); border-radius: 30px; position: relative; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; }
+        
+        .staff { font-size: 100px; transition: all 0.5s; margin-top: 30px; }
+        .staff.approach { transform: scale(1.4); }
+        
+        .message-box { background: #f9f9f9; border: 4px solid #eee; border-radius: 20px; padding: 20px; margin: 20px auto; min-height: 100px; width: 85%; font-size: 26px; line-height: 1.5; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 80%; margin: 0 auto; }
+        button { font-family: 'Jua'; font-size: 22px; padding: 15px; border: none; border-radius: 15px; cursor: pointer; transition: 0.2s; background: var(--primary); color: #333; box-shadow: 0 4px 0 #d4ac00; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #d4ac00; }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        
+        .mic-btn { font-size: 45px; background: #ff6666; color: white; width: 90px; height: 90px; border-radius: 50%; margin: 10px auto; display: none; cursor: pointer; border: none; box-shadow: 0 5px 15px rgba(255,102,102,0.4); }
+        .status { font-weight: bold; color: #ff4444; margin-top: 10px; font-size: 22px; min-height: 30px; }
+        .medal { font-size: 160px; animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .success-text { color: #e67e22; font-size: 42px; margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h2 id="title" style="color: #555;">🍽️ 세계 음식점 거리 (English Speaking)</h2>
+    <div id="visual-area" class="staff">🌍</div>
+    <div id="message" class="message-box">게임을 시작하려면 아래 버튼을 눌러주세요!<br>(마이크 사용 권한 팝업이 뜨면 '허용'을 눌러야 해요)</div>
+    <div id="choices" class="btn-grid">
+        <button id="start-btn" style="grid-column: span 2; background: #4CAF50; color: white;">게임 시작하기 (마이크 체크)</button>
+    </div>
+    <button id="mic-btn" class="mic-btn">🎤</button>
+    <div id="status" class="status"></div>
+</div>
