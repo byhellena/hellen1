@@ -3,86 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>본리초 5학년 영어 말하기 인증</title>
+    <title>본리초 영어 말하기 인증</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #fff9e6;
-            --primary: #ffcc00;
-            --primary-dark: #d4ac00;
-            --green: #4CAF50;
-            --green-dark: #388E3C;
-            --red: #ff6666;
-            --red-dark: #cc3333;
-            --blue: #2196F3;
-            --blue-dark: #1565C0;
-        }
+        :root { --bg: #fff9e6; --primary: #ffcc00; --green: #4CAF50; --red: #ff6666; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Jua', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        #game-container { width: 100%; max-width: 500px; background: white; border: 6px solid var(--primary); border-radius: 30px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        #visual-area { font-size: 80px; min-height: 100px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        #visual-area.speaking { animation: talk 0.3s infinite alternate; }
+        @keyframes talk { from { transform: scale(1); } to { transform: scale(1.1); } }
+        #message { background: #f9f9f9; border: 2px solid #eee; border-radius: 15px; padding: 15px; width: 100%; font-size: 18px; text-align: center; line-height: 1.5; min-height: 80px; }
+        #choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        button { font-family: 'Jua', sans-serif; font-size: 18px; padding: 15px; border: none; border-radius: 12px; cursor: pointer; background: var(--primary); color: #333; box-shadow: 0 4px 0 #d4ac00; }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        .btn-full { grid-column: span 2; }
+        .btn-green { background: var(--green); color: white; box-shadow: 0 4px 0 #388E3C; }
+        #status { font-size: 14px; color: #e53935; height: 20px; margin-top: 5px; }
+        #mic-btn { font-size: 30px; background: var(--red); color: white; width: 70px; height: 70px; border-radius: 50%; display: none; margin-top: 10px; border: none; }
+    </style>
+</head>
+<body>
 
-        body {
-            font-family: 'Jua', sans-serif;
-            background: var(--bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 10px;
-        }
+<div id="game-container">
+    <div id="visual-area">🌍</div>
+    <div id="message">아래 버튼을 눌러 시작하세요!</div>
+    <div id="choices">
+        <button id="start-btn" class="btn-full btn-green">🎮 게임 시작하기</button>
+    </div>
+    <button id="mic-btn">🎤</button>
+    <div id="status"></div>
+</div>
 
-        #game-container {
-            width: 860px;
-            max-width: 100%;
-            background: white;
-            border: 8px solid var(--primary);
-            border-radius: 30px;
-            padding: 22px 28px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
+<script>
+const visual = document.getElementById('visual-area');
+const msg = document.getElementById('message');
+const choices = document.getElementById('choices');
+const micBtn = document.getElementById('mic-btn');
+const statusEl = document.getElementById('status');
 
-        #title { color: #555; font-size: 22px; text-align: center; }
+let audioUnlocked = false;
 
-        #visual-area {
-            font-size: 88px;
-            line-height: 1.1;
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.4s ease;
-        }
-        #visual-area.approach { transform: scale(1.35); }
-        #visual-area.speaking { animation: talk 0.35s infinite alternate; }
-        @keyframes talk {
-            from { transform: rotate(-5deg) scale(1.05); }
-            to   { transform: rotate( 5deg) scale(1.10); }
-        }
+// [필살기] 오디오 엔진 강제 활성화 함수
+function forceUnlockAudio() {
+    if (audioUnlocked) return;
+    
+    // 1. Web Audio API 깨우기
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const silent = ctx.createGain();
+        silent.gain.value = 0;
+        osc.connect(silent);
+        silent.connect(ctx.destination);
+        osc.start(0);
+        osc.stop(0.1);
+    }
 
-        #message {
-            background: #f9f9f9;
-            border: 4px solid #eee;
-            border-radius: 20px;
-            padding: 16px 22px;
-            min-height: 88px;
-            width: 90%;
-            font-size: 20px;
-            line-height: 1.65;
-            white-space: pre-line;
-            text-align: center;
-        }
+    // 2. TTS 엔진 깨우기 (매우 중요)
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(" ");
+        utter.volume = 0;
+        window.speechSynthesis.speak(utter);
+    }
+    
+    audioUnlocked = true;
+    console.log("Audio Unlocked!");
+}
 
-        #choices {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 13px;
-            width: 84%;
-        }
+function speak(text, callback) {
+    if (!window.speechSynthesis) return callback();
 
-        button {
-            font-family: 'Jua', sans-serif;
-            font-size: 18px;
-            padding: 13px 10px;
-            border
+    window.speechSynthesis.cancel();
+    
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = 0.8;
+
+    let isDone = false;
+    const finish = () => {
+        if (isDone) return;
+        isDone = true;
+        visual.classList.remove('speaking');
+        if (callback) callback();
+    };
+
+    // [안전장치] 소리가 안 나더라도 3.5초 뒤엔 무조건 다음으로!
+    const fallback = setTimeout(finish, 3500);
+
+    utter.onend = () => { clearTimeout(fallback); finish(); };
+    utter.onerror = () => { clearTimeout(fallback); finish(); };
+
+    visual.classList.add('speaking');
+    
+    // 모바일 딜레이 보정
+    setTimeout(() => {
+        window.speechSynthesis.speak(utter);
+    }, 50);
+}
+
+document.getElementById('start-btn').onclick = function() {
+    forceUnlockAudio(); // 터치하는 순간 엔진 해제
+    this.style.display = 'none';
+    msg.innerText = "식당을 선택해 주세요.";
+    
+    const restaurants = ['한식', '일식', '중식', '양식'];
+    choices.innerHTML = '';
+    restaurants.forEach(r => {
+        const btn = document.createElement('button');
+        btn.innerText = r;
+        btn.onclick = () => {
+            visual.innerText = '👨‍🍳';
+            msg.innerText = "식당에 들어왔습니다!";
+            choices.innerHTML = '';
+            setTimeout(askFood, 1000);
+        };
+        choices.appendChild(btn);
+    });
+};
+
+function askFood() {
+    msg.innerText = "직원: Hello! Do you want some Bibimbap?";
+    speak("Hello! Do you want some Bibimbap?", () => {
+        choices.innerHTML = `
+            <button class="btn-green" onclick="finalStep(true)">Yes, please!</
