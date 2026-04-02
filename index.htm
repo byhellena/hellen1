@@ -1172,19 +1172,15 @@ function checkVoice(text, score) {
     var isYes = /yes|yeah|yep|sure|okay|ok|please|플리즈|네|예/.test(text);
     var isNo  = /no|nope|나|아니|않|thanks|thank/.test(text);
 
-    // ── Hellen 연습: 정확도 60% 이상 필요 ──
+    // ── Hellen 연습 ──
     if (currentStep === 'hellen_practice') {
-        if (score < 60) {
-            handleMicFail('정확도 ' + Math.round(score) + '% → 60% 이상 필요해요');
-            return;
-        }
         var food = window._practiceList[window._practiceIdx] || '';
         var foodWords = food.toLowerCase().split(' ');
         var hasFood   = foodWords.some(function(w){ return w.length > 2 && text.indexOf(w) >= 0; });
         var hasPhrase = /want|do you|hellen/.test(text);
-        if (hasFood || hasPhrase || text.length > 5) {
+        if (text.length > 2 && (hasFood || hasPhrase || text.length > 4)) {
             micFailCount = 0;
-            setStatus('🌟 Excellent! (인식: "' + text + '", 정확도: ' + Math.round(score) + '%)');
+            setStatus('🌟 Excellent! (인식: "' + text + '")');
             handleHellenPractice(food);
         } else {
             handleMicFail('"Hellen, do you want some ' + food + '?"라고 말해주세요');
@@ -1192,15 +1188,9 @@ function checkVoice(text, score) {
         return;
     }
 
-    // ── 그 외 단계: 정확도 50% 미만이면 실패 처리 ──
-    if (score < 50) {
-        handleMicFail('정확도 ' + Math.round(score) + '% → 다시 말해주세요');
-        return;
-    }
-
     if (currentStep === 'hello') {
         micFailCount = 0;
-        setStatus('🌟 Excellent!');
+        setStatus('🌟 Excellent! (인식: "' + text + '")');
         setTimeout(function(){ askMenu(); }, 900);
         return;
     }
@@ -1208,21 +1198,21 @@ function checkVoice(text, score) {
     if (currentStep === 'menu') {
         if (isYes)      { micFailCount = 0; handleMenuAnswer(true); }
         else if (isNo)  { micFailCount = 0; handleMenuAnswer(false); }
-        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); }
+        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요! (인식: "' + text + '")'); }
         return;
     }
 
     if (currentStep === 'drink') {
         if (isYes)      { micFailCount = 0; handleDrinkAnswer(true); }
         else if (isNo)  { micFailCount = 0; handleDrinkAnswer(false); }
-        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); }
+        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요! (인식: "' + text + '")'); }
         return;
     }
 
     if (currentStep === 'dessert') {
         if (isYes)      { micFailCount = 0; handleDessertAnswer(true); }
         else if (isNo)  { micFailCount = 0; handleDessertAnswer(false); }
-        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); }
+        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요! (인식: "' + text + '")'); }
         return;
     }
 }
