@@ -532,6 +532,7 @@ const MAX_MIC_FAILS    = 2;   // 2번 실패 시 자동 넘어감
 
 // ── 5초 타이머 관련 ──
 let listenTimer        = null;
+var timerFired         = false;
 const LISTEN_TIMEOUT   = 5000; // 5초
 
 // ══════════════════════════════════════════
@@ -610,6 +611,7 @@ function initRecognition() {
     recognition.continuous = false;
 
     recognition.onresult = function (event) {
+        timerFired = false;
         clearListenTimer(); // 타이머 해제
         micBtn.classList.remove('listening');
         var best = event.results[0][0];
@@ -620,6 +622,8 @@ function initRecognition() {
     recognition.onerror = function (e) {
         clearListenTimer();
         micBtn.classList.remove('listening');
+        if (timerFired) { timerFired = false; return; } // 타이머가 먼저 처리했으면 무시
+        if (e.error === 'aborted') { return; } // abort는 무시
         if (e.error === 'no-speech') {
             handleMicFail('소리가 감지되지 않았어요.');
         } else if (e.error === 'not-allowed') {
@@ -640,11 +644,11 @@ function initRecognition() {
 // ══════════════════════════════════════════
 function startListenTimer() {
     clearListenTimer();
+    timerFired = false;
     timerBarWrap.style.display = 'block';
     timerBar.style.transition  = 'none';
     timerBar.style.width       = '100%';
 
-    // 다음 프레임에서 트랜지션 시작 (CSS 애니메이션 트릭)
     requestAnimationFrame(function(){
         requestAnimationFrame(function(){
             timerBar.style.transition = 'width ' + (LISTEN_TIMEOUT / 1000) + 's linear';
@@ -653,7 +657,8 @@ function startListenTimer() {
     });
 
     listenTimer = setTimeout(function(){
-        // 5초 경과 → 인식 중단 후 실패 처리
+        // 5초 경과 → abort 후 onerror가 또 handleMicFail을 부르지 않도록 플래그 설정
+        timerFired = true;
         try { if (recognition) recognition.abort(); } catch(e) {}
         micBtn.classList.remove('listening');
         handleMicFail('시간이 초과됐어요.');
