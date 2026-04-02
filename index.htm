@@ -1,10 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>본리초 5학년 영어 식당 놀이</title>
-    <title> 5학년 영어 식당 놀이</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -164,6 +164,23 @@
             color: #856404;
         }
         #speaking-badge.show { display: inline-block; }
+
+        /* 타이머 바 */
+        #timer-bar-wrap {
+            display: none;
+            width: 84%;
+            height: 14px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #4CAF50, #ffcc00, #ff6666);
+            border-radius: 10px;
+            transition: width linear;
+        }
 
         #mic-btn {
             font-size: 38px;
@@ -400,6 +417,12 @@
         <button id="start-btn" class="btn-full btn-green">🎮 게임 시작하기</button>
     </div>
     <div id="speaking-badge">🔊 직원이 말하고 있어요...</div>
+
+    <!-- 타이머 바 -->
+    <div id="timer-bar-wrap">
+        <div id="timer-bar"></div>
+    </div>
+
     <button id="mic-btn">🎤</button>
     <div id="status"></div>
 </div>
@@ -428,20 +451,30 @@ const hellenBubble   = document.getElementById('hellen-bubble');
 const practiceBox    = document.getElementById('practice-box');
 const kickedScene    = document.getElementById('kicked-scene');
 const kickedMsg      = document.getElementById('kicked-msg');
+const timerBarWrap   = document.getElementById('timer-bar-wrap');
+const timerBar       = document.getElementById('timer-bar');
 
 // ══════════════════════════════════════════
 //  식당 데이터
 // ══════════════════════════════════════════
-const drinks = ['Soda', 'Coke', 'Juice', 'Tea', 'Milk'];
+const drinks = (function(){
+    var base = ['Milk', 'Coke', 'Soda', 'Water'];
+    for (var i = base.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = base[i]; base[i] = base[j]; base[j] = tmp;
+    }
+    return base;
+})();
 
-// 음식 이모지 맵
 const foodEmoji = {
     'Bibimbap':'🍲','Bulgogi':'🥩','Jajangmyeon':'🍜','Mapo Tofu':'🫕',
     'Sushi':'🍣','Ramen':'🍜','Pasta':'🍝','Pizza':'🍕',
     'Yakgwa':'🍪','Hotteok':'🥞','Tanghulu':'🍡','Egg Tart':'🥧',
     'Mochi':'🍡','Dorayaki':'🥞','Gelato':'🍨','Tiramisu':'🍰',
     'Dalgona':'🍬','Kulfi':'🍦','Ice Cream':'🍦',
-    'Soda':'🥤','Coke':'🥤','Juice':'🍊','Tea':'🍵','Milk':'🥛','Water':'💧'
+    'Soda':'🥤','Coke':'🥤','Juice':'🍊','Tea':'🍵','Milk':'🥛','Water':'💧',
+    'Fish Bread':'🐟','Cheese Tteokbokki':'🧀','Tteokbokki Smoothie':'🥛','엄청 맛있는 급식':'🍱','Beef Steak':'🥩',
+    'Strawberry Pudding':'🍓','Dubai Chewy Cookie':'🍪','Orange':'🍊'
 };
 
 const restaurantData = {
@@ -451,11 +484,18 @@ const restaurantData = {
         desserts: ['Dalgona', 'Kulfi', 'Ice Cream', 'Yakgwa', 'Hotteok'],
         voice: { pitch: 0.85, rate: 0.78, gender: 'male',   lang: 'en-US' }
     },
-    '중식(Chinese)': {
-        staff: '👩‍🍳',
-        menus:    ['Jajangmyeon', 'Mapo Tofu'],
-        desserts: ['Dalgona', 'Kulfi', 'Ice Cream', 'Tanghulu', 'Egg Tart'],
-        voice: { pitch: 1.30, rate: 0.78, gender: 'female', lang: 'en-US' }
+    '본리 식당': {
+        staff: '🧑‍🍳',
+        menus:    ['Fish Bread', 'Cheese Tteokbokki', 'Tteokbokki Smoothie', '엄청 맛있는 급식', 'Beef Steak'],
+        desserts: ['Strawberry Pudding', 'Dubai Chewy Cookie', 'Orange'],
+        voice: { pitch: 1.10, rate: 0.78, gender: 'female', lang: 'en-US' },
+        menuComments: {
+            'Fish Bread': '취향이 독특하시군요',
+            'Cheese Tteokbokki': '탁월한 선택!',
+            'Tteokbokki Smoothie': '취향이 독특하시군요',
+            '엄청 맛있는 급식': '탁월한 선택!',
+            'Beef Steak': '탁월한 선택!'
+        }
     },
     '일식(Japanese)': {
         staff: '🧑‍🍳',
@@ -478,60 +518,52 @@ let currentStep        = 'start';
 let selectedRestaurant = '';
 let recognition        = null;
 let useMic             = false;
-let menuRejectCount    = 0;   // 메인메뉴 거절 횟수
-let currentMenu        = '';  // 현재 권하고 있는 메뉴
-let menuQueue          = [];  // 남은 메뉴 목록
+let menuRejectCount    = 0;
+let currentMenu        = '';
+let menuQueue          = [];
 let drinkIndex         = 0;
 let dessertIndex       = 0;
 let orderedMain        = '';
 let orderedDessert     = '';
 
+// ── 실패 횟수 추적 (단계별) ──
+let micFailCount       = 0;   // 현재 단계에서 마이크 실패 횟수
+const MAX_MIC_FAILS    = 2;   // 2번 실패 시 자동 넘어감
+
+// ── 5초 타이머 관련 ──
+let listenTimer        = null;
+const LISTEN_TIMEOUT   = 5000; // 5초
+
 // ══════════════════════════════════════════
-//  마이크 설정: 최초 1회만 묻고 localStorage에 저장
+//  마이크 설정
 // ══════════════════════════════════════════
 startBtn.onclick = function () {
-    unlockAudioContext(); // 모바일 자동재생 차단 해제 (첫 터치에서 실행)
+    unlockAudioContext();
     var saved = localStorage.getItem('micSetting');
     if (!saved) {
         micChoicePopup.classList.add('show');
     } else {
         useMic = (saved === 'yes');
-        if (useMic) {
-            tryBootWithMic();
-        } else {
-            bootGame();
-        }
+        if (useMic) { tryBootWithMic(); } else { bootGame(); }
     }
 };
 
 function setMicChoice(useIt) {
-    unlockAudioContext(); // 팝업 버튼 클릭 시도 unlock
+    unlockAudioContext();
     micChoicePopup.classList.remove('show');
     localStorage.setItem('micSetting', useIt ? 'yes' : 'no');
     useMic = useIt;
-    if (useIt) {
-        tryBootWithMic();
-    } else {
-        bootGame();
-    }
+    if (useIt) { tryBootWithMic(); } else { bootGame(); }
 }
 
-// 마이크 권한 확인 (이미 granted면 팝업 없이 바로)
 function tryBootWithMic() {
     if (localStorage.getItem('micGranted') === 'yes' && navigator.permissions) {
         navigator.permissions.query({ name: 'microphone' })
             .then(function (r) {
-                if (r.state === 'granted') {
-                    bootGame();
-                } else {
-                    localStorage.removeItem('micGranted');
-                    micGuide.classList.add('show');
-                }
+                if (r.state === 'granted') { bootGame(); }
+                else { localStorage.removeItem('micGranted'); micGuide.classList.add('show'); }
             })
-            .catch(function () {
-                // Permissions API 불가 → 이미 granted 기록 있으면 그냥 시작
-                bootGame();
-            });
+            .catch(function () { bootGame(); });
     } else if (localStorage.getItem('micGranted') === 'yes') {
         bootGame();
     } else {
@@ -540,7 +572,7 @@ function tryBootWithMic() {
 }
 
 micAllowBtn.onclick = function () {
-    unlockAudioContext(); // 마이크 허용 버튼도 unlock 포인트
+    unlockAudioContext();
     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(function (stream) {
             stream.getTracks().forEach(function (t) { t.stop(); });
@@ -578,6 +610,7 @@ function initRecognition() {
     recognition.continuous = false;
 
     recognition.onresult = function (event) {
+        clearListenTimer(); // 타이머 해제
         micBtn.classList.remove('listening');
         var best = event.results[0][0];
         var transcript = best.transcript.toLowerCase().trim();
@@ -585,26 +618,97 @@ function initRecognition() {
         checkVoice(transcript, confidence);
     };
     recognition.onerror = function (e) {
+        clearListenTimer();
         micBtn.classList.remove('listening');
         if (e.error === 'no-speech') {
-            setStatus('소리가 감지되지 않았어요. 다시 눌러 말해주세요!');
+            handleMicFail('소리가 감지되지 않았어요.');
         } else if (e.error === 'not-allowed') {
             setStatus('마이크 권한이 없어요. 새로고침 후 다시 시도해주세요.');
+            micBtn.style.display = 'block';
         } else {
-            setStatus('잘 안 들려요! 다시 눌러 말해주세요. (' + e.error + ')');
+            handleMicFail('잘 안 들려요! (' + e.error + ')');
         }
-        micBtn.style.display = 'block';
     };
     recognition.onend = function () {
+        clearListenTimer();
         micBtn.classList.remove('listening');
     };
 }
 
 // ══════════════════════════════════════════
+//  5초 타이머
+// ══════════════════════════════════════════
+function startListenTimer() {
+    clearListenTimer();
+    timerBarWrap.style.display = 'block';
+    timerBar.style.transition  = 'none';
+    timerBar.style.width       = '100%';
+
+    // 다음 프레임에서 트랜지션 시작 (CSS 애니메이션 트릭)
+    requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+            timerBar.style.transition = 'width ' + (LISTEN_TIMEOUT / 1000) + 's linear';
+            timerBar.style.width      = '0%';
+        });
+    });
+
+    listenTimer = setTimeout(function(){
+        // 5초 경과 → 인식 중단 후 실패 처리
+        try { if (recognition) recognition.abort(); } catch(e) {}
+        micBtn.classList.remove('listening');
+        handleMicFail('시간이 초과됐어요.');
+    }, LISTEN_TIMEOUT);
+}
+
+function clearListenTimer() {
+    if (listenTimer) { clearTimeout(listenTimer); listenTimer = null; }
+    timerBarWrap.style.display = 'none';
+    timerBar.style.transition  = 'none';
+    timerBar.style.width       = '100%';
+}
+
+// ══════════════════════════════════════════
+//  마이크 실패 처리 (2번 실패 시 자동 진행)
+// ══════════════════════════════════════════
+function handleMicFail(reason) {
+    micFailCount++;
+    hideMic();
+
+    if (micFailCount >= MAX_MIC_FAILS) {
+        // 2번 실패 → 자동으로 다음 단계
+        micFailCount = 0;
+        setStatus('🔇 주변이 시끄럽군요! 다음으로 넘어갈게요~');
+        setTimeout(function(){
+            advanceFromStep(currentStep);
+        }, 1800);
+    } else {
+        // 1번 실패 → 다시 시도 안내
+        setStatus('다시 눌러 말해보세요! (' + reason + ')');
+        micBtn.style.display = 'block';
+    }
+}
+
+// 현재 단계에서 자동으로 다음 단계 진행
+function advanceFromStep(step) {
+    setStatus('');
+    if (step === 'hello') {
+        askMenu();
+    } else if (step === 'menu') {
+        // 기본값: No로 처리 (다른 메뉴 시도)
+        handleMenuAnswer(false);
+    } else if (step === 'drink') {
+        handleDrinkAnswer(false);
+    } else if (step === 'dessert') {
+        handleDessertAnswer(false);
+    } else if (step === 'hellen_practice') {
+        var food = window._practiceList ? (window._practiceList[window._practiceIdx] || '') : '';
+        handleHellenPractice(food);
+    }
+}
+
+// ══════════════════════════════════════════
 //  TTS
 // ══════════════════════════════════════════
-
-// ── 모바일 자동재생 차단 해제용 AudioContext ──
 var audioCtxUnlocked = false;
 function unlockAudioContext() {
     if (audioCtxUnlocked) return;
@@ -617,7 +721,6 @@ function unlockAudioContext() {
         src.start(0);
         ctx.resume().then(function(){ ctx.close(); });
     } catch(e) {}
-    // iOS Safari: speechSynthesis를 빈 utterance로 한 번 깨워두기
     if (window.speechSynthesis) {
         var dummy = new SpeechSynthesisUtterance('');
         dummy.volume = 0;
@@ -664,26 +767,15 @@ function speak(text, callback) {
         if (callback) callback();
     }
 
-    utter.onend   = done;
-    utter.onerror = done;
-
-    // ── 안전망: 예상 재생 시간 + 2초 뒤에도 콜백 미실행이면 강제 실행 ──
-    // (모바일에서 onend 이벤트가 안 오는 경우 대비)
     var estimatedMs = Math.max(2000, (text.length / 10) * (1 / vp.rate) * 1000 + 2000);
     var safeTimer = setTimeout(done, estimatedMs);
 
-    utter.onend = function() { clearTimeout(safeTimer); done(); };
+    utter.onend  = function() { clearTimeout(safeTimer); done(); };
     utter.onerror = function() { clearTimeout(safeTimer); done(); };
 
-    // iOS Safari는 짧은 딜레이 후 speak() 해야 안정적
     setTimeout(function() {
-        // iOS에서 synthesis가 멈춰있을 때 resume() 먼저 호출
-        if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-        }
+        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
         window.speechSynthesis.speak(utter);
-
-        // iOS Safari 버그: speak() 후 일정 시간마다 resume() 해줘야 끊기지 않음
         var resumeTimer = setInterval(function() {
             if (window.speechSynthesis.paused) window.speechSynthesis.resume();
         }, 250);
@@ -697,7 +789,7 @@ function speak(text, callback) {
 function setMsg(text)    { msg.innerText = text; }
 function setStatus(text) { statusEl.innerText = text; }
 function clearChoices()  { choices.innerHTML = ''; }
-function hideMic()       { micBtn.style.display = 'none'; micBtn.classList.remove('listening'); }
+function hideMic()       { micBtn.style.display = 'none'; micBtn.classList.remove('listening'); clearListenTimer(); }
 
 function hideAllScenes() {
     diningScene.style.display  = 'none';
@@ -709,7 +801,8 @@ function hideAllScenes() {
 
 function showMic(target) {
     clearChoices();
-    currentStep = target;
+    currentStep  = target;
+    micFailCount = 0; // 단계 바뀔 때 실패 횟수 초기화
     micBtn.style.display = 'block';
     micBtn.classList.remove('listening');
     setStatus('🎤 마이크 버튼을 누르고 크게 말해보세요!');
@@ -722,7 +815,8 @@ micBtn.onclick = function () {
         try {
             recognition.start();
             micBtn.classList.add('listening');
-            setStatus('👂 듣고 있어요... 말씀하세요!');
+            setStatus('👂 듣고 있어요... (5초 안에 말해주세요!)');
+            startListenTimer(); // ← 5초 타이머 시작
         } catch(e) { setStatus('다시 눌러보세요!'); }
     }, 200);
 };
@@ -739,7 +833,6 @@ function showYesNoButtons(onYes, onNo) {
 //  게임 흐름
 // ══════════════════════════════════════════
 
-// ── 식당 선택 ─────────────────────────────
 function showRestaurantSelection() {
     visual.innerText = '🌍';
     visual.classList.remove('approach', 'speaking');
@@ -755,7 +848,6 @@ function showRestaurantSelection() {
     setStatus(''); hideMic();
 }
 
-// ── 입장 ──────────────────────────────────
 function enterRestaurant(name) {
     selectedRestaurant = name;
     menuRejectCount = 0;
@@ -763,7 +855,7 @@ function enterRestaurant(name) {
     dessertIndex    = 0;
     orderedMain     = '';
     orderedDessert  = '';
-    // 메뉴를 섞어서 큐에 넣기
+    micFailCount    = 0;
     menuQueue = restaurantData[name].menus.slice();
     visual.innerText = restaurantData[name].staff;
     visual.classList.add('approach');
@@ -773,7 +865,6 @@ function enterRestaurant(name) {
     setTimeout(sayHello, 1500);
 }
 
-// ── 인사 ──────────────────────────────────
 function sayHello() {
     visual.classList.remove('approach');
     setMsg('직원: Hello! 👋\n(올바른 대답을 골라보세요)');
@@ -809,18 +900,16 @@ function checkHelloChoice(ans) {
     }
 }
 
-// ── 메인 메뉴 (1개 고르기, 4번 거절하면 쫓겨남) ──
 function askMenu() {
-    // 현재 권할 메뉴 결정: menuQueue를 순환
+    micFailCount = 0;
     if (menuQueue.length === 0) menuQueue = restaurantData[selectedRestaurant].menus.slice();
     currentMenu = menuQueue.shift();
 
     setMsg('직원: Do you want some ' + currentMenu + '? 🍽️\n"Yes, please!" 또는 "No, thanks!"라고 해보세요.\n\n' +
            foodEmoji[currentMenu] + ' ' + currentMenu);
     speak('Do you want some ' + currentMenu + '?', function(){
-        if (useMic) {
-            showMic('menu');
-        } else {
+        if (useMic) { showMic('menu'); }
+        else {
             showYesNoButtons(
                 function(){ handleMenuAnswer(true); },
                 function(){ handleMenuAnswer(false); }
@@ -832,27 +921,31 @@ function askMenu() {
 function handleMenuAnswer(isYes) {
     if (isYes) {
         orderedMain = currentMenu;
-        setStatus('🌟 Great choice!');
-        setMsg('직원: Excellent! Enjoy your ' + currentMenu + '! 😊');
+        var data = restaurantData[selectedRestaurant];
+        var comment = (data.menuComments && data.menuComments[currentMenu]) ? data.menuComments[currentMenu] : '';
+        var statusMsg = comment ? '🌟 ' + comment : '🌟 Great choice!';
+        setStatus(statusMsg);
+        var displayMsg = comment
+            ? '직원: ' + comment + ' 😊\nEnjoy your ' + currentMenu + '!'
+            : '직원: Excellent! Enjoy your ' + currentMenu + '! 😊';
+        setMsg(displayMsg);
         speak('Excellent! Enjoy your ' + currentMenu + '!', function(){
             drinkIndex = 0;
+            micFailCount = 0;
             setTimeout(askDrink, 800);
         });
     } else {
         menuRejectCount++;
         if (menuRejectCount >= 4) {
-            // 4번 거절 → 쫓겨나기
             showKicked();
         } else {
             setStatus('다른 메뉴를 추천해 드릴게요! 😊');
-            // 큐가 비면 다시 채우기
             if (menuQueue.length === 0) menuQueue = restaurantData[selectedRestaurant].menus.slice();
             setTimeout(askMenu, 700);
         }
     }
 }
 
-// ── 쫓겨나기 ──────────────────────────────
 function showKicked() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     visual.innerText = '😤';
@@ -874,15 +967,14 @@ function showKicked() {
     }, 3000);
 }
 
-// ── 음료 (5가지 순환, 다 거절 시 물) ────────
 function askDrink() {
+    micFailCount = 0;
     var drink = drinks[drinkIndex];
     var emoji = foodEmoji[drink] || '🥤';
     setMsg('직원: How about some ' + drink + '? ' + emoji + '\n"Yes, please!" 또는 "No, thanks!"라고 해보세요.');
     speak('How about some ' + drink + '?', function(){
-        if (useMic) {
-            showMic('drink');
-        } else {
+        if (useMic) { showMic('drink'); }
+        else {
             showYesNoButtons(
                 function(){ handleDrinkAnswer(true); },
                 function(){ handleDrinkAnswer(false); }
@@ -898,32 +990,34 @@ function handleDrinkAnswer(isYes) {
         setMsg('직원: Great! Here is your ' + drink + '! Enjoy! 😊');
         speak('Great! Here is your ' + drink + '! Enjoy!', function(){
             dessertIndex = 0;
+            micFailCount = 0;
             setTimeout(askDessert, 800);
         });
     } else {
         drinkIndex++;
         if (drinkIndex < drinks.length) {
+            micFailCount = 0;
             setTimeout(askDrink, 600);
         } else {
             setMsg('직원: Okay! I\'ll bring you some water then. 💧');
             speak("Okay! I'll bring you some water then.", function(){
                 dessertIndex = 0;
+                micFailCount = 0;
                 setTimeout(askDessert, 800);
             });
         }
     }
 }
 
-// ── 디저트 (3번 권유, 다 거절 시 넘어감) ─────
 function askDessert() {
+    micFailCount = 0;
     var desserts = restaurantData[selectedRestaurant].desserts;
     var dessert  = desserts[dessertIndex];
     var emoji    = foodEmoji[dessert] || '🍮';
     setMsg('직원: Would you like some ' + dessert + ' for dessert? ' + emoji + '\n"Yes, please!" 또는 "No, thanks!"라고 해보세요.');
     speak('Would you like some ' + dessert + ' for dessert?', function(){
-        if (useMic) {
-            showMic('dessert');
-        } else {
+        if (useMic) { showMic('dessert'); }
+        else {
             showYesNoButtons(
                 function(){ handleDessertAnswer(true); },
                 function(){ handleDessertAnswer(false); }
@@ -944,7 +1038,8 @@ function handleDessertAnswer(isYes) {
         });
     } else {
         dessertIndex++;
-        if (dessertIndex < 3) {
+        if (dessertIndex < desserts.length) {
+            micFailCount = 0;
             setTimeout(askDessert, 600);
         } else {
             orderedDessert = '';
@@ -956,7 +1051,6 @@ function handleDessertAnswer(isYes) {
     }
 }
 
-// ── 주문 완료 표시 ─────────────────────────
 function showOrderSummary() {
     hideAllScenes();
     orderScene.style.display = 'flex';
@@ -982,7 +1076,6 @@ function showOrderSummary() {
     }, 2500);
 }
 
-// ── 식사 씬 ───────────────────────────────
 function showDiningScene() {
     diningScene.style.display = 'flex';
 
@@ -1002,16 +1095,12 @@ function showDiningScene() {
     }, 2500);
 }
 
-// ── Hellen 권하기 말하기 연습 ──────────────
 function startHellenPractice() {
     diningScene.style.display = 'none';
-
-    // 연습 목록: 메인 1개 + 디저트 1개(있으면)
     var list = [orderedMain];
     if (orderedDessert) list.push(orderedDessert);
     window._practiceList = list;
     window._practiceIdx  = 0;
-
     showHellenPrompt();
 }
 
@@ -1021,6 +1110,7 @@ function showHellenPrompt() {
     if (idx >= list.length) { showEnding(); return; }
     var food = list[idx];
 
+    micFailCount = 0;
     visual.innerText = '😄';
     hellenBubble.style.display = 'none';
     practiceBox.style.display  = 'block';
@@ -1067,7 +1157,9 @@ function handleHellenPractice(food) {
     }
 }
 
-// ── 음성 인식 결과 처리 ──────────────────
+// ══════════════════════════════════════════
+//  음성 인식 결과 처리
+// ══════════════════════════════════════════
 function checkVoice(text, score) {
     hideMic();
     console.log('인식:', text, '| 정확도:', Math.round(score) + '%');
@@ -1078,56 +1170,54 @@ function checkVoice(text, score) {
     // ── Hellen 연습: 정확도 60% 이상 필요 ──
     if (currentStep === 'hellen_practice') {
         if (score < 60) {
-            setStatus('다시 말해보세요! (정확도: ' + Math.round(score) + '% → 60% 이상 필요해요)');
-            micBtn.style.display = 'block';
+            handleMicFail('정확도 ' + Math.round(score) + '% → 60% 이상 필요해요');
             return;
         }
         var food = window._practiceList[window._practiceIdx] || '';
-        // "do you want some" 또는 음식 이름 포함 여부 확인
-        var foodWords  = food.toLowerCase().split(' ');
-        var hasFood    = foodWords.some(function(w){ return w.length > 2 && text.indexOf(w) >= 0; });
-        var hasPhrase  = /want|do you|hellen/.test(text);
+        var foodWords = food.toLowerCase().split(' ');
+        var hasFood   = foodWords.some(function(w){ return w.length > 2 && text.indexOf(w) >= 0; });
+        var hasPhrase = /want|do you|hellen/.test(text);
         if (hasFood || hasPhrase || text.length > 5) {
+            micFailCount = 0;
             setStatus('🌟 Excellent! (인식: "' + text + '", 정확도: ' + Math.round(score) + '%)');
             handleHellenPractice(food);
         } else {
-            setStatus('다시 말해보세요! "Hellen, do you want some ' + food + '?"');
-            micBtn.style.display = 'block';
+            handleMicFail('"Hellen, do you want some ' + food + '?"라고 말해주세요');
         }
         return;
     }
 
-    // ── 그 외 단계: 정확도 50% 미만이면 재도전 ──
+    // ── 그 외 단계: 정확도 50% 미만이면 실패 처리 ──
     if (score < 50) {
-        setStatus('다시 말해보세요! (인식: "' + text + '", 정확도: ' + Math.round(score) + '%)');
-        micBtn.style.display = 'block';
+        handleMicFail('정확도 ' + Math.round(score) + '% → 다시 말해주세요');
         return;
     }
 
     if (currentStep === 'hello') {
+        micFailCount = 0;
         setStatus('🌟 Excellent!');
         setTimeout(function(){ askMenu(); }, 900);
         return;
     }
 
     if (currentStep === 'menu') {
-        if (isYes)      handleMenuAnswer(true);
-        else if (isNo)  handleMenuAnswer(false);
-        else { setStatus('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); micBtn.style.display='block'; }
+        if (isYes)      { micFailCount = 0; handleMenuAnswer(true); }
+        else if (isNo)  { micFailCount = 0; handleMenuAnswer(false); }
+        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); }
         return;
     }
 
     if (currentStep === 'drink') {
-        if (isYes)      handleDrinkAnswer(true);
-        else if (isNo)  handleDrinkAnswer(false);
-        else { setStatus('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); micBtn.style.display='block'; }
+        if (isYes)      { micFailCount = 0; handleDrinkAnswer(true); }
+        else if (isNo)  { micFailCount = 0; handleDrinkAnswer(false); }
+        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); }
         return;
     }
 
     if (currentStep === 'dessert') {
-        if (isYes)      handleDessertAnswer(true);
-        else if (isNo)  handleDessertAnswer(false);
-        else { setStatus('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); micBtn.style.display='block'; }
+        if (isYes)      { micFailCount = 0; handleDessertAnswer(true); }
+        else if (isNo)  { micFailCount = 0; handleDessertAnswer(false); }
+        else { handleMicFail('"Yes, please!" 또는 "No, thanks!"라고 말해주세요!'); }
         return;
     }
 }
