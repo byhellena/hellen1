@@ -657,7 +657,6 @@ function startListenTimer() {
     });
 
     listenTimer = setTimeout(function(){
-        // 5초 경과 → abort 후 onerror가 또 handleMicFail을 부르지 않도록 플래그 설정
         timerFired = true;
         try { if (recognition) recognition.abort(); } catch(e) {}
         micBtn.classList.remove('listening');
@@ -680,14 +679,12 @@ function handleMicFail(reason) {
     hideMic();
 
     if (micFailCount >= MAX_MIC_FAILS) {
-        // 2번 실패 → 자동으로 다음 단계
         micFailCount = 0;
         setStatus('🔇 주변이 시끄럽군요! 다음으로 넘어갈게요~');
         setTimeout(function(){
             advanceFromStep(currentStep);
         }, 1800);
     } else {
-        // 1번 실패 → 다시 시도 안내
         setStatus('다시 눌러 말해보세요! (' + reason + ')');
         micBtn.style.display = 'block';
     }
@@ -699,7 +696,6 @@ function advanceFromStep(step) {
     if (step === 'hello') {
         askMenu();
     } else if (step === 'menu') {
-        // 기본값: No로 처리 (다른 메뉴 시도)
         handleMenuAnswer(false);
     } else if (step === 'drink') {
         handleDrinkAnswer(false);
@@ -807,7 +803,7 @@ function hideAllScenes() {
 function showMic(target) {
     clearChoices();
     currentStep  = target;
-    micFailCount = 0; // 단계 바뀔 때 실패 횟수 초기화
+    micFailCount = 0;
     micBtn.style.display = 'block';
     micBtn.classList.remove('listening');
     setStatus('🎤 마이크 버튼을 누르고 크게 말해보세요!');
@@ -821,7 +817,7 @@ micBtn.onclick = function () {
             recognition.start();
             micBtn.classList.add('listening');
             setStatus('👂 듣고 있어요... (5초 안에 말해주세요!)');
-            startListenTimer(); // ← 5초 타이머 시작
+            startListenTimer();
         } catch(e) { setStatus('다시 눌러보세요!'); }
     }, 200);
 };
@@ -870,14 +866,17 @@ function enterRestaurant(name) {
     setTimeout(sayHello, 1500);
 }
 
+// ══════════════════════════════════════════
+//  ★ 수정된 부분: Hello → Good afternoon!
+// ══════════════════════════════════════════
 function sayHello() {
     visual.classList.remove('approach');
-    setMsg('직원: Hello! 👋\n(올바른 대답을 골라보세요)');
+    setMsg('직원: Good afternoon! 🌤️\n(올바른 대답을 골라보세요)');
     clearChoices();
-    speak('Hello! Welcome!', function(){
+    speak('Good afternoon! Welcome!', function(){
         choices.innerHTML =
-            '<button onclick="checkHelloChoice(\'right\')">Hello!</button>' +
-            '<button onclick="checkHelloChoice(\'wrong1\')">Goodbye!</button>' +
+            '<button onclick="checkHelloChoice(\'right\')">Good afternoon!</button>' +
+            '<button onclick="checkHelloChoice(\'wrong1\')">Good night!</button>' +
             '<button onclick="checkHelloChoice(\'wrong2\')">I\'m hungry!</button>' +
             '<button onclick="checkHelloChoice(\'wrong3\')">I\'m sorry!</button>';
     });
@@ -887,7 +886,7 @@ function checkHelloChoice(ans) {
     if (ans === 'right') {
         setStatus('✅ 정답!');
         if (useMic) {
-            setMsg("잘 했어요! 이번엔 마이크로\n'Hello!'라고 직접 말해보세요. 🎤");
+            setMsg("잘 했어요! 이번엔 마이크로\n'Good afternoon!'이라고 직접 말해보세요. 🎤");
             clearChoices();
             setTimeout(function(){ showMic('hello'); }, 500);
         } else {
@@ -1188,10 +1187,16 @@ function checkVoice(text, score) {
         return;
     }
 
+    // ★ 수정된 부분: good afternoon 인식 처리 (관련 단어 모두 허용)
     if (currentStep === 'hello') {
-        micFailCount = 0;
-        setStatus('🌟 Excellent! (인식: "' + text + '")');
-        setTimeout(function(){ askMenu(); }, 900);
+        var isGoodAfternoon = /good|afternoon|good afternoon/.test(text);
+        if (isGoodAfternoon || text.length > 2) {
+            micFailCount = 0;
+            setStatus('🌟 Excellent! (인식: "' + text + '")');
+            setTimeout(function(){ askMenu(); }, 900);
+        } else {
+            handleMicFail('"Good afternoon!"이라고 말해주세요!');
+        }
         return;
     }
 
